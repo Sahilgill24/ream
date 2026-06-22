@@ -1,20 +1,20 @@
 use std::{env, error::Error};
 
-use vergen::{BuildBuilder, CargoBuilder, Emitter, RustcBuilder};
+use vergen::{Build, Cargo, Emitter, Rustc};
 use vergen_git2::Git2Builder;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let build = BuildBuilder::default().build_timestamp(true).build()?;
-    let cargo = CargoBuilder::default()
+    let build = Build::builder().build_timestamp(true).build();
+    let cargo = Cargo::builder()
         .features(true)
         .target_triple(true)
-        .build()?;
+        .build();
     let git2 = Git2Builder::default()
         .describe(false, true, None)
         .dirty(true)
         .sha(false)
         .build()?;
-    let rustc = RustcBuilder::default().semver(true).build()?;
+    let rustc = Rustc::builder().semver(true).build();
     Emitter::default()
         .add_instructions(&build)?
         .add_instructions(&cargo)?
