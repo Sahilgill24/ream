@@ -19,6 +19,7 @@ reth-payload-builder = { path = "../../../../reth/crates/payload/builder" }
 alloy-genesis = "2.1.0"
 alloy-primitives.workspace = true
 alloy-rpc-types-engine.workspace = true
+sha2.workspace = true
 futures-util = "0.3.32"
 eyre = "0.6.12"
 serde_json.workspace = true

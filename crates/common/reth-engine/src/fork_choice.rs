@@ -2,9 +2,11 @@
 
 use alloy_primitives::{Address, B256};
 use alloy_rpc_types_engine::{ForkchoiceState, PayloadAttributes};
+use sha2::{Digest, Sha256};
 
-// To create the ForkChoiceState in order to call
-fn create_fork_choice_state(
+// Creating the Fork Choice state
+// at genesis all 3 of them would be B256::Zero
+pub fn create_fork_choice_state(
     head_block_hash: B256,
     safe_block_hash: B256,
     finalized_block_hash: B256,
@@ -46,7 +48,7 @@ fn create_fork_choice_state(
 
 // withdrawals: Option<Vec<Withdrawal>>,
 // This represents Validator withdrawl, I am not adding it here currently for our case, can be set to none Simply
-fn create_payload_attributes(
+pub fn create_payload_attributes(
     timestamp: u64,
     prev_randao: B256,
     suggested_fee_recipient: Address,
@@ -63,4 +65,29 @@ fn create_payload_attributes(
         slot_number,
         target_gas_limit,
     }
+}
+
+// prev_randao = sha256(parent_lean_block_root || slot_le64)
+// timestamp = genesis_time + slot * seconds_per_slot (4 s/slot on lean devnet)
+pub fn create_lean_payload_attributes(
+    slot: u64,
+    parent_lean_block_root: B256,
+    genesis_time: u64,
+    seconds_per_slot: u64,
+) -> PayloadAttributes {
+    let prev_randao = {
+        let mut h = Sha256::new();
+        h.update(parent_lean_block_root.as_slice());
+        h.update(slot.to_le_bytes());
+        B256::from_slice(&h.finalize())
+    };
+
+    create_payload_attributes(
+        genesis_time + slot * seconds_per_slot,
+        prev_randao,
+        Address::ZERO,
+        Some(parent_lean_block_root),
+        Some(slot),
+        None,
+    )
 }

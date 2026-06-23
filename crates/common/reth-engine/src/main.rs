@@ -18,9 +18,8 @@ use reth_ethereum::{
     tasks::Runtime,
 };
 
-use reth_engine::handler::{RethReamHandle};
+use reth_engine::handler::RethReamHandle;
 
-fn fork_choice_updated<T: PayloadTypes>(handle: RethReamHandle<T>) {}
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
@@ -43,8 +42,11 @@ async fn main() -> eyre::Result<()> {
         .await?;
 
     let consensus_engine_handle = node.consensus_engine_handle().clone();
-    let payload_engine_handle = node.payload_builder_handle.clone();
-
+    let payload_builder_handle = node.payload_builder_handle.clone();
+    // Here is our handle to manage all the communication's but we would have to spawn diff threads to start the communication
+    // Similiar to the tx pool tracing example 
+    let handle = RethReamHandle::new(consensus_engine_handle, payload_builder_handle);
+    // create the ForkChoiceState, payload attributes from ream, then spawn a task executor of reth
     let mut notifications = node.provider.canonical_state_stream();
 
     // submit tx through rpc
