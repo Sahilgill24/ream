@@ -7,4 +7,7 @@ Read the above for more context
 
 Next steps 
 
-call the FCU from the consensus engine and make a tx pool tracer to verify the tx has gone to the Pool 
+- Adding a tx pool tracer to check if the transaction was properly added to the pool 
+- using the payload ID to properly construct the payload on ream
+
+<img src= "./images/image.png"></img>

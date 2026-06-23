@@ -3,8 +3,9 @@
 use std::sync::Arc;
 
 use alloy_genesis::Genesis;
-use alloy_primitives::{b256, hex};
+use alloy_primitives::{B256, b256, hex};
 use futures_util::StreamExt;
+use reth_ethereum::provider::BlockHashReader;
 use reth_ethereum::{
     chainspec::ChainSpec,
     node::{
@@ -18,8 +19,10 @@ use reth_ethereum::{
     tasks::Runtime,
 };
 
-use reth_engine::handler::RethReamHandle;
-
+use reth_engine::{
+    fork_choice::{create_fork_choice_state, create_lean_payload_attributes},
+    handler::RethReamHandle,
+};
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
@@ -44,11 +47,13 @@ async fn main() -> eyre::Result<()> {
     let consensus_engine_handle = node.consensus_engine_handle().clone();
     let payload_builder_handle = node.payload_builder_handle.clone();
     // Here is our handle to manage all the communication's but we would have to spawn diff threads to start the communication
-    // Similiar to the tx pool tracing example 
+    // Similiar to the tx pool tracing example
     let handle = RethReamHandle::new(consensus_engine_handle, payload_builder_handle);
     // create the ForkChoiceState, payload attributes from ream, then spawn a task executor of reth
     let mut notifications = node.provider.canonical_state_stream();
-
+    let genesis_hash = node.provider.block_hash(0)?.unwrap();
+    let state = create_fork_choice_state(genesis_hash, B256::ZERO, B256::ZERO);
+    let payload_attrs = create_lean_payload_attributes(1, B256::ZERO, 0, 4);
     // submit tx through rpc
     let raw_tx = hex!(
         "02f876820a28808477359400847735940082520894ab0840c0e43688012c1adb0f5e3fc665188f83d28a029d394a5d630544000080c080a0a044076b7e67b5deecc63f61a8d7913fab86ca365b344b5759d1fe3563b4c39ea019eab979dd000da04dfc72bb0377c092d30fd9e1cab5ae487de49586cc8b0090"
@@ -60,6 +65,15 @@ async fn main() -> eyre::Result<()> {
 
     let expected = b256!("0xb1c6512f4fc202c04355fbda66755e0e344b152e633010e8fd75ecec09b63398");
 
+    node.task_executor.spawn_task(async move {
+        let response = handle
+            .consensus_engine_handle
+            .fork_choice_updated(state, Some(payload_attrs))
+            .await
+            .unwrap();
+
+        println!("{:?}", response);
+    });
     assert_eq!(hash, expected);
     println!("submitted transaction: {hash}");
 
