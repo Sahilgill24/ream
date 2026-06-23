@@ -4152,6 +4152,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "git2"
+version = "0.21.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ddddbf932745a6be37109b6112d3ee09696106f848449069d3a57bba937ab82e"
+dependencies = [
+ "bitflags",
+ "libc",
+ "libgit2-sys",
+ "log",
+]
+
+[[package]]
 name = "glob"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5862,9 +5874,9 @@ checksum = "48f5d2a454e16a5ea0f4ced81bd44e4cfc7bd3a507b61887c99fd3538b28e4af"
 
 [[package]]
 name = "libgit2-sys"
-version = "0.18.3+1.9.2"
+version = "0.18.5+1.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c9b3acc4b91781bb0b3386669d325163746af5f6e4f73e6d2d630e09a35f3487"
+checksum = "005d6ae6eac1912906073e069f7db60b1fa98e052a68227824afe3e3a1c59ca2"
 dependencies = [
  "cc",
  "libc",
@@ -9156,7 +9168,7 @@ name = "ream-node"
 version = "0.1.0"
 dependencies = [
  "vergen 10.0.0",
- "vergen-git2 1.0.4",
+ "vergen-git2 10.0.0",
 ]
 
 [[package]]
@@ -10232,6 +10244,7 @@ dependencies = [
  "eyre",
  "futures-util",
  "reth-ethereum",
+ "reth-payload-builder",
  "serde_json",
  "tokio",
 ]
@@ -14711,28 +14724,13 @@ dependencies = [
 
 [[package]]
 name = "vergen-git2"
-version = "1.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "63b1709455150884cd5ae75d37c858111c25facbe3bde24ab9f862753875f883"
-dependencies = [
- "anyhow",
- "derive_builder",
- "git2",
- "rustversion",
- "time",
- "vergen 9.1.0",
- "vergen-lib 0.1.6",
-]
-
-[[package]]
-name = "vergen-git2"
 version = "9.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d51ab55ddf1188c8d679f349775362b0fa9e90bd7a4ac69838b2a087623f0d57"
 dependencies = [
  "anyhow",
  "derive_builder",
- "git2",
+ "git2 0.20.4",
  "rustversion",
  "time",
  "vergen 9.1.0",
@@ -14740,14 +14738,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "vergen-lib"
-version = "0.1.6"
+name = "vergen-git2"
+version = "10.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b07e6010c0f3e59fcb164e0163834597da68d1f864e2b8ca49f74de01e9c166"
+checksum = "b6e1ddb3075d894c0796fa8e592b778b1a6c034cb95d254372e5c2270adbfbfe"
 dependencies = [
  "anyhow",
- "derive_builder",
+ "bon",
+ "git2 0.21.0",
  "rustversion",
+ "time",
+ "vergen 10.0.0",
+ "vergen-lib 10.0.0",
 ]
 
 [[package]]

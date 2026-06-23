@@ -1,4 +1,5 @@
 #![warn(unused_crate_dependencies)]
+
 use std::sync::Arc;
 
 use alloy_genesis::Genesis;
@@ -8,6 +9,7 @@ use reth_ethereum::{
     chainspec::ChainSpec,
     node::{
         EthereumNode,
+        api::PayloadTypes,
         builder::{NodeBuilder, NodeHandle},
         core::{args::RpcServerArgs, node_config::NodeConfig},
     },
@@ -16,7 +18,9 @@ use reth_ethereum::{
     tasks::Runtime,
 };
 
-pub struct RethReamHandle {}
+use reth_engine::handler::{RethReamHandle};
+
+fn fork_choice_updated<T: PayloadTypes>(handle: RethReamHandle<T>) {}
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
@@ -26,7 +30,8 @@ async fn main() -> eyre::Result<()> {
     let node_config = NodeConfig::test()
         .dev()
         .with_rpc(RpcServerArgs::default().with_http())
-        .with_chain(custom_chain());
+        .with_chain(custom_chain())
+        .with_unused_ports();
 
     let NodeHandle {
         node,

@@ -1,7 +1,7 @@
 use std::{env, error::Error};
 
 use vergen::{Build, Cargo, Emitter, Rustc};
-use vergen_git2::Git2Builder;
+use vergen_git2::Git2;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let build = Build::builder().build_timestamp(true).build();
@@ -9,11 +9,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         .features(true)
         .target_triple(true)
         .build();
-    let git2 = Git2Builder::default()
+    let git2 = Git2::builder()
         .describe(false, true, None)
         .dirty(true)
         .sha(false)
-        .build()?;
+        .build();
     let rustc = Rustc::builder().semver(true).build();
     Emitter::default()
         .add_instructions(&build)?

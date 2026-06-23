@@ -15,6 +15,7 @@ reth-ethereum = { path = "../../../../reth/crates/ethereum/reth", features = [
     "node",
     "test-utils",
 ] }
+reth-payload-builder = { path = "../../../../reth/crates/payload/builder" }
 alloy-genesis = "2.1.0"
 alloy-primitives.workspace = true
 alloy-rpc-types-engine.workspace = true
