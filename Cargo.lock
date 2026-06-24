@@ -10246,6 +10246,7 @@ dependencies = [
  "reth-ethereum",
  "reth-payload-builder",
  "serde_json",
+ "sha2",
  "tokio",
 ]
 

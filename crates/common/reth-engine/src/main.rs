@@ -1,7 +1,7 @@
 #![warn(unused_crate_dependencies)]
 
 use std::sync::Arc;
-
+use std::time::Instant;
 use alloy_genesis::Genesis;
 use alloy_primitives::{B256, b256, hex};
 use futures_util::StreamExt;
@@ -10,7 +10,6 @@ use reth_ethereum::{
     chainspec::ChainSpec,
     node::{
         EthereumNode,
-        api::PayloadTypes,
         builder::{NodeBuilder, NodeHandle},
         core::{args::RpcServerArgs, node_config::NodeConfig},
     },
@@ -23,9 +22,11 @@ use reth_engine::{
     fork_choice::{create_fork_choice_state, create_lean_payload_attributes},
     handler::RethReamHandle,
 };
+use reth_payload_builder::PayloadKind;
 
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
+    
     let runtime = Runtime::test();
     println!("Reth Node Started");
     // create node config
@@ -67,16 +68,28 @@ async fn main() -> eyre::Result<()> {
     let expected = b256!("0xb1c6512f4fc202c04355fbda66755e0e344b152e633010e8fd75ecec09b63398");
 
     // This is to mimic the behaviour of the Proposer block
+    // This is without step's and connection with EL, but just a bit of how the resp/req would go on
     // For non-proposer's instead of Some(payload_attrs), just send None
+    
     node.task_executor.spawn_task(async move {
+        let start = Instant::now();
         let response = handle
             .consensus_engine_handle
             .fork_choice_updated(state, Some(payload_attrs))
             .await
             .unwrap();
-
-        println!("{:?}", response);
+        let payload_id = response.payload_id.unwrap();
+        let response_after_payload = handle
+            .payload_builder_handle
+            .resolve_kind(payload_id, PayloadKind::WaitForPending)
+            .await
+            .unwrap()
+            .expect("some error with payload stuff I suppose");
+        println!("{:?}", response.payload_id.unwrap());
+        println!("{:?}", response_after_payload);
+        println!("Time taken in this process {:?}",start.elapsed());
     });
+    
     assert_eq!(hash, expected);
     println!("submitted transaction: {hash}");
 
