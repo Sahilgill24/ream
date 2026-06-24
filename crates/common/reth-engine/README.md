@@ -10,4 +10,6 @@ Next steps
 - Adding a tx pool tracer to check if the transaction was properly added to the pool 
 - using the payload ID to properly construct the payload on ream
 
-<img src= "./images/image.png"></img>
+Currently following the execution specs of cancun 
+
+https://github.com/ethereum/execution-apis/blob/main/src/engine/cancun.md

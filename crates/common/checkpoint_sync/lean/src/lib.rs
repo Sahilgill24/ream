@@ -120,7 +120,7 @@ mod tests {
     #[cfg(feature = "devnet4")]
     use ream_consensus_lean::block::BlockSignatures;
     use ream_consensus_lean::{
-        block::{Block, BlockBody, SignedBlock},
+        block::{Block, BlockBody, SignedBlock, ReamExecutionPayload},
         state::LeanState,
         utils::generate_default_validators,
         validator::Validator,
@@ -504,6 +504,7 @@ mod tests {
             state_root: state.tree_hash_root(),
             body: BlockBody {
                 attestations: Default::default(),
+                execution_payload: ReamExecutionPayload {},
             },
         };
         SignedBlock {

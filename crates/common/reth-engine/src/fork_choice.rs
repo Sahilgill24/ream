@@ -6,6 +6,9 @@ use sha2::{Digest, Sha256};
 
 // Creating the Fork Choice state
 // at genesis all 3 of them would be B256::Zero
+// Current head's hash
+// latest justified block's hash
+// latest finalized block' hash
 pub fn create_fork_choice_state(
     head_block_hash: B256,
     safe_block_hash: B256,

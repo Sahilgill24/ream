@@ -1,6 +1,6 @@
 use alloy_primitives::B256;
 use ream_consensus_lean::{
-    block::{Block, BlockBody},
+    block::{Block, BlockBody,ReamExecutionPayload},
     state::LeanState,
     validator::Validator,
 };
@@ -14,6 +14,7 @@ fn genesis_block(state_root: B256) -> Block {
         state_root,
         body: BlockBody {
             attestations: Default::default(),
+            execution_payload: ReamExecutionPayload {},
         },
     }
 }

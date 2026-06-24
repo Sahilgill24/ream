@@ -273,11 +273,36 @@ impl From<Block> for BlockHeader {
     }
 }
 
+// This is the execution payload
+// it should also get signed by ream/CL and be included in the tree_hash_root() etc.
+#[derive(Debug, Serialize, Deserialize, Encode, Decode, TreeHash, PartialEq, Eq, Clone)]
+pub struct ReamExecutionPayload {
+    
+}
+
+
+impl ReamExecutionPayload {
+    
+}
 /// Represents the body of a block in the Lean chain.
+/// LeanExecutionPayload to be added here, similiar to what in beacon chain is ExecutionPayloadV3
+/// I would have wanted a Option<ReamExecutionPayload>, but it gave TreeHash's error of not able implement a method for Option<>
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Encode, Decode, TreeHash)]
 pub struct BlockBody {
     pub attestations: VariableList<AggregatedAttestation, U4096>,
+    pub execution_payload: ReamExecutionPayload,
 }
+// would have to implement this anyway
+// Doing this had some other type of issues
+// impl TreeHash for Option<ReamExecutionPayload> {
+//     fn tree_hash_packed_encoding(&self) -> tree_hash::PackedEncoding {}
+
+//     fn tree_hash_packing_factor() -> usize {}
+
+//     fn tree_hash_root(&self) -> tree_hash::Hash256 {}
+
+//     fn tree_hash_type() -> tree_hash::TreeHashType {}
+// }
 
 #[derive(Debug, PartialEq, Eq, Clone, Serialize, Deserialize, Encode, Decode)]
 pub struct BlockWithSignatures {

@@ -24,7 +24,7 @@ use crate::attestation::{AggregatedAttestation, AggregatedSignatureProof, Attest
 #[cfg(feature = "devnet5")]
 use crate::attestation::{AggregatedAttestation, AttestationData, SingleMessageAggregate};
 use crate::{
-    block::{Block, BlockBody, BlockHeader},
+    block::{Block, BlockBody, BlockHeader, ReamExecutionPayload},
     checkpoint::Checkpoint,
     config::Config,
     slot::{is_justifiable_after, justified_index_after},
@@ -62,6 +62,7 @@ impl LeanState {
                 state_root: B256::ZERO,
                 body_root: BlockBody {
                     attestations: Default::default(),
+                    execution_payload: ReamExecutionPayload {},
                 }
                 .tree_hash_root(),
             },
@@ -605,6 +606,7 @@ mod test {
             state_root: B256::ZERO,
             body: BlockBody {
                 attestations: VariableList::empty(),
+                execution_payload: ReamExecutionPayload {},
             },
         })?;
 
@@ -640,6 +642,7 @@ mod test {
                     },
                 }])
                 .map_err(|err| anyhow!("Failed to get aggregated attestation {err:?}"))?,
+                execution_payload: ReamExecutionPayload {},
             },
         })?;
 
@@ -675,6 +678,7 @@ mod test {
                     },
                 }])
                 .map_err(|err| anyhow!("Failed to get aggregated attestation {err:?}"))?,
+                execution_payload: ReamExecutionPayload {},
             },
         })?;
 
@@ -700,6 +704,7 @@ mod test {
             state_root: B256::ZERO,
             body: BlockBody {
                 attestations: VariableList::empty(),
+                execution_payload: ReamExecutionPayload {},
             },
         })?;
         assert_eq!(state.justified_slots.len(), 0);
@@ -712,6 +717,7 @@ mod test {
             state_root: B256::ZERO,
             body: BlockBody {
                 attestations: VariableList::empty(),
+                execution_payload: ReamExecutionPayload {},
             },
         })?;
         assert_eq!(state.justified_slots.len(), 1);
@@ -732,6 +738,7 @@ mod test {
             state_root: B256::ZERO,
             body: BlockBody {
                 attestations: VariableList::empty(),
+                execution_payload: ReamExecutionPayload {},
             },
         })?;
 
@@ -768,6 +775,7 @@ mod test {
             state_root: B256::ZERO,
             body: BlockBody {
                 attestations: VariableList::new(vec![attestation_0_to_1]).unwrap(),
+                execution_payload: ReamExecutionPayload {},
             },
         })?;
 
@@ -784,6 +792,7 @@ mod test {
                 state_root: B256::ZERO,
                 body: BlockBody {
                     attestations: VariableList::empty(),
+                    execution_payload: ReamExecutionPayload {},
                 },
             })?;
         }
@@ -856,6 +865,7 @@ mod test {
                 state_root: B256::ZERO,
                 body: BlockBody {
                     attestations: VariableList::empty(),
+                    execution_payload: ReamExecutionPayload {},
                 },
             })?;
         }
@@ -904,7 +914,10 @@ mod test {
             proposer_index: 10 % 4,
             parent_root: block_9_root,
             state_root: B256::ZERO,
-            body: BlockBody { attestations },
+            body: BlockBody {
+                attestations,
+                execution_payload: ReamExecutionPayload {},
+            },
         })?;
 
         // latest_justified must be slot 9 — the highest justified target,
@@ -983,7 +996,8 @@ mod test {
         assert_eq!(
             state.latest_block_header.body_root,
             BlockBody {
-                attestations: Default::default()
+                attestations: Default::default(),
+                execution_payload: ReamExecutionPayload {},
             }
             .tree_hash_root()
         );
@@ -1036,6 +1050,7 @@ mod test {
             state_root: B256::ZERO,
             body: BlockBody {
                 attestations: VariableList::empty(),
+                execution_payload: ReamExecutionPayload {},
             },
         };
 
@@ -1083,6 +1098,7 @@ mod test {
             state_root: B256::ZERO,
             body: BlockBody {
                 attestations: VariableList::empty(),
+                execution_payload: ReamExecutionPayload {},
             },
         };
 
@@ -1114,6 +1130,7 @@ mod test {
             state_root: B256::ZERO,
             body: BlockBody {
                 attestations: VariableList::empty(),
+                execution_payload: ReamExecutionPayload {},
             },
         };
 
@@ -1143,6 +1160,7 @@ mod test {
             state_root: B256::ZERO,
             body: BlockBody {
                 attestations: VariableList::empty(),
+                execution_payload: ReamExecutionPayload {},
             },
         };
 
@@ -1175,6 +1193,7 @@ mod test {
             state_root: B256::ZERO,
             body: BlockBody {
                 attestations: VariableList::empty(),
+                execution_payload: ReamExecutionPayload {},
             },
         };
 
@@ -1190,6 +1209,7 @@ mod test {
             state_root: expected_state.tree_hash_root(),
             body: BlockBody {
                 attestations: VariableList::empty(),
+                execution_payload: ReamExecutionPayload {},
             },
         };
 
@@ -1221,6 +1241,7 @@ mod test {
             state_root: B256::ZERO,
             body: BlockBody {
                 attestations: VariableList::empty(),
+                execution_payload: ReamExecutionPayload {},
             },
         };
 

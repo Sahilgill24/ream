@@ -27,7 +27,7 @@ use reth_engine::{
 #[tokio::main]
 async fn main() -> eyre::Result<()> {
     let runtime = Runtime::test();
-
+    println!("Reth Node Started");
     // create node config
     let node_config = NodeConfig::test()
         .dev()
@@ -48,6 +48,7 @@ async fn main() -> eyre::Result<()> {
     let payload_builder_handle = node.payload_builder_handle.clone();
     // Here is our handle to manage all the communication's but we would have to spawn diff threads to start the communication
     // Similiar to the tx pool tracing example
+    // this would be assigned here itself
     let handle = RethReamHandle::new(consensus_engine_handle, payload_builder_handle);
     // create the ForkChoiceState, payload attributes from ream, then spawn a task executor of reth
     let mut notifications = node.provider.canonical_state_stream();
@@ -65,6 +66,8 @@ async fn main() -> eyre::Result<()> {
 
     let expected = b256!("0xb1c6512f4fc202c04355fbda66755e0e344b152e633010e8fd75ecec09b63398");
 
+    // This is to mimic the behaviour of the Proposer block
+    // For non-proposer's instead of Some(payload_attrs), just send None
     node.task_executor.spawn_task(async move {
         let response = handle
             .consensus_engine_handle

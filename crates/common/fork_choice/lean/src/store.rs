@@ -15,7 +15,7 @@ use ream_consensus_lean::{
         AggregatedAttestation, AggregatedAttestations, AttestationData, SignatureKey,
         SignedAggregatedAttestation, SignedAttestation,
     },
-    block::{Block, BlockBody, BlockWithSignatures, SignedBlock},
+    block::{Block, BlockBody, BlockWithSignatures, SignedBlock,ReamExecutionPayload},
     checkpoint::Checkpoint,
     slot::is_justifiable_after,
     state::{LeanState, attestation_data_matches_chain},
@@ -989,6 +989,7 @@ impl Store {
                 state_root: B256::ZERO,
                 body: BlockBody {
                     attestations: attestations_list,
+                    execution_payload: ReamExecutionPayload {},
                 },
             };
 
@@ -1036,6 +1037,7 @@ impl Store {
             state_root: B256::ZERO,
             body: BlockBody {
                 attestations: attestations_list,
+                execution_payload: ReamExecutionPayload {},
             },
         };
 
