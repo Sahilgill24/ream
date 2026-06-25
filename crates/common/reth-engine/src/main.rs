@@ -73,12 +73,17 @@ async fn main() -> eyre::Result<()> {
     
     node.task_executor.spawn_task(async move {
         let start = Instant::now();
+        // This is the FCU update step 
         let response = handle
             .consensus_engine_handle
             .fork_choice_updated(state, Some(payload_attrs))
             .await
             .unwrap();
         let payload_id = response.payload_id.unwrap();
+
+        // This is recieving the payload built by reth
+        // It should be embedded into the EL
+        
         let response_after_payload = handle
             .payload_builder_handle
             .resolve_kind(payload_id, PayloadKind::WaitForPending)
@@ -87,6 +92,11 @@ async fn main() -> eyre::Result<()> {
             .expect("some error with payload stuff I suppose");
         println!("{:?}", response.payload_id.unwrap());
         println!("{:?}", response_after_payload);
+
+        // This step is to be done when a block is recieved from a peer
+        // helps in vaildating the payload status
+        let response_verify_payload = handle.consensus_engine_handle.new_payload(response_after_payload.into()).await.unwrap();
+        println!("{:?}", response_verify_payload);
         println!("Time taken in this process {:?}",start.elapsed());
     });
     
@@ -107,7 +117,7 @@ fn custom_chain() -> Arc<ChainSpec> {
     "nonce": "0x42",
     "timestamp": "0x0",
     "extraData": "0x5343",
-    "gasLimit": "0x5208",
+    "gasLimit": "0x1C9C380",
     "difficulty": "0x400000000",
     "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
     "coinbase": "0x0000000000000000000000000000000000000000",
@@ -134,7 +144,10 @@ fn custom_chain() -> Arc<ChainSpec> {
         "londonBlock": 0,
         "terminalTotalDifficulty": 0,
         "terminalTotalDifficultyPassed": true,
-        "shanghaiTime": 0
+        "shanghaiTime": 0,
+        "cancunTime": 0,
+        "pragueTime": 0,
+        "amsterdamTime": 0
     }
 }
 "#;
