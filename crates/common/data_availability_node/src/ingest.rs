@@ -1,4 +1,5 @@
-use ream_data_availability::column::CandidateColumn;
+use alloy_primitives::B256;
+use ream_data_availability::column::{CandidateBlock, CandidateColumn};
 use tokio::sync::mpsc;
 use tracing::debug;
 
@@ -8,8 +9,21 @@ use crate::error::IngestionError;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum IngestWorkItem {
     Candidate(CandidateColumn),
+    /// A whole block's worth of candidate columns. One block occupies one
+    /// queue slot, so admission is all-or-nothing, never split.
+    CandidateBlock(CandidateBlock),
     /// A beacon-issued retention boundary.
     Retention(RetentionHint),
+
+    /// A self-issued request to recover one block's missing columns.
+    /// Queued by the verification service itself — with a settling delay
+    Reconstruction(ReconstructionRequest),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ReconstructionRequest {
+    /// Root of the block whose missing columns should be recovered.
+    pub block_root: B256,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -47,6 +61,27 @@ impl IngestHandle {
             })
     }
 
+    /// Submit a whole block's batch, awaiting while the queue is full.
+    pub async fn submit_block(&self, candidate: CandidateBlock) -> Result<(), IngestionError> {
+        self.sender
+            .send(IngestWorkItem::CandidateBlock(candidate))
+            .await
+            .map_err(|err| {
+                debug!("block submission failed, receiver dropped: {err}");
+                IngestionError::Closed
+            })
+    }
+
+    /// Submit a whole block's batch without waiting.
+    pub fn try_submit_block(&self, candidate: CandidateBlock) -> Result<(), IngestionError> {
+        self.sender
+            .try_send(IngestWorkItem::CandidateBlock(candidate))
+            .map_err(|err| match err {
+                mpsc::error::TrySendError::Full(_) => IngestionError::Overloaded,
+                mpsc::error::TrySendError::Closed(_) => IngestionError::Closed,
+            })
+    }
+
     /// Submit a retention hint, awaiting while the queue is full.
     pub async fn submit_retention(&self, hint: RetentionHint) -> Result<(), IngestionError> {
         self.sender
@@ -67,6 +102,11 @@ impl IngestHandle {
                 mpsc::error::TrySendError::Full(_) => IngestionError::Overloaded,
                 mpsc::error::TrySendError::Closed(_) => IngestionError::Closed,
             })
+    }
+
+    // TODO: will be removed after using DB instead file store
+    pub fn downgrade(&self) -> mpsc::WeakSender<IngestWorkItem> {
+        self.sender.downgrade()
     }
 }
 

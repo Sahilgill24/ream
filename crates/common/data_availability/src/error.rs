@@ -42,6 +42,15 @@ pub enum ValidationError {
 
     #[error("verifier error: {0}")]
     VerifierFailure(String),
+
+    #[error("block batch contains no columns")]
+    EmptyBatch,
+
+    #[error("duplicate column index {column_index} in block batch")]
+    DuplicateColumnIndex { column_index: u64 },
+
+    #[error("reconstruction failed: {0}")]
+    ReconstructionFailure(String),
 }
 
 #[derive(Debug, Error)]
@@ -49,4 +58,9 @@ pub enum ColumnStoreError {
     /// Underlying storage failure; "not found" is `Ok(None)`, not an error.
     #[error("storage I/O failure: {0}")]
     Io(#[from] io::Error),
+
+    /// Failure inside an embedded storage backend, carried as a message so
+    /// `ream-data-availability` stays free of any backend dependency.
+    #[error("storage backend failure: {0}")]
+    Backend(String),
 }

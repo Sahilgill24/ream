@@ -8,6 +8,7 @@ use ream_consensus_misc::{
     constants::beacon::INTERVALS_PER_SLOT, misc::compute_start_slot_at_epoch,
 };
 use ream_execution_engine::engine_trait::ExecutionApi;
+use ream_metrics::BEACON_PROCESSED_DEPOSITS_TOTAL;
 use ream_network_spec::networks::beacon_network_spec;
 use ream_storage::{
     errors::StoreError,
@@ -61,12 +62,11 @@ pub async fn on_block(
         store.db.finalized_checkpoint_provider().get()?.epoch,
     )?;
     ensure!(store.db.finalized_checkpoint_provider().get()?.root == finalized_checkpoint_block);
+
+    // Blocks routinely arrive before their column sidecars, so this rejects on the first gossip
+    // attempt and relies on the block-range syncer to retry once sidecars have landed.
+    // TODO(#1483): queue as pending and re-check once sidecars arrive, instead of rejecting now.
     if verify_blob_availability && !block.body.blob_kzg_commitments.is_empty() {
-        // Check if data is available (Fulu: uses column sidecars instead of blobs)
-        // If not, this block MAY be queued and subsequently considered when data becomes
-        // available *Note*: Extraneous or invalid data (in addition to the
-        // expected/referenced valid data) received on the p2p network MUST NOT invalidate
-        // a block that is otherwise valid and available
         ensure!(
             store.is_data_available(block_root)?,
             "Data not available for block root: {block_root:x}",
@@ -84,6 +84,8 @@ pub async fn on_block(
     state
         .state_transition(signed_block, true, execution_engine)
         .await?;
+
+    BEACON_PROCESSED_DEPOSITS_TOTAL.set(state.eth1_deposit_index as i64);
 
     // Add new block to the store
     store
@@ -120,6 +122,7 @@ pub async fn on_block(
     store.update_checkpoints(
         state.current_justified_checkpoint,
         state.finalized_checkpoint,
+        state.previous_justified_checkpoint,
     )?;
 
     // Eagerly compute unrealized justification and finality.

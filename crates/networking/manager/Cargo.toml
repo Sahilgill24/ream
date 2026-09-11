@@ -50,6 +50,7 @@ ream-execution-rpc-types.workspace = true
 ream-executor.workspace = true
 ream-fork-choice-beacon.workspace = true
 ream-light-client.workspace = true
+ream-metrics.workspace = true
 ream-network-spec.workspace = true
 ream-operation-pool.workspace = true
 ream-p2p.workspace = true
@@ -59,6 +60,10 @@ ream-storage.workspace = true
 ream-sync-committee-pool.workspace = true
 ream-syncer.workspace = true
 ream-validator-beacon.workspace = true
+
+[dev-dependencies]
+ssz_types.workspace = true
+tempfile.workspace = true
 
 [lints]
 workspace = true

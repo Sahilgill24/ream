@@ -7,6 +7,7 @@ use ream_consensus_misc::polynomial_commitments::{
     kzg_commitment::KZGCommitment, kzg_proof::KZGProof,
 };
 use ream_execution_rpc_types::get_blobs::Blob;
+use ream_metrics::BEACON_KZG_VERIFICATION_DATA_COLUMN_BATCH_SECONDS;
 use rust_kzg_blst::{
     eip_7594::BlstBackend,
     types::{fr::FsFr, g1::FsG1, kzg_settings::FsKZGSettings},
@@ -47,13 +48,51 @@ pub fn verify_blob_kzg_proof_batch(
 
 /// Verify that a set of cells belong to their corresponding commitments.
 ///
-/// Spec: https://ethereum.github.io/consensus-specs/specs/fulu/polynomial-commitments-sampling/#verify_cell_kzg_proof_batch_impl
+/// Spec: https://ethereum.github.io/consensus-specs/fulu/polynomial-commitments-sampling/#verify_cell_kzg_proof_batch
 pub fn verify_cell_kzg_proof_batch(
     commitments_bytes: &VariableList<KZGCommitment, MaxBlobCommitmentsPerBlock>,
     cell_indices: &[u64],
     cells: &VariableList<Cell, MaxBlobCommitmentsPerBlock>,
     proofs_bytes: &VariableList<KZGProof, MaxBlobCommitmentsPerBlock>,
 ) -> anyhow::Result<bool> {
+    let _timer = BEACON_KZG_VERIFICATION_DATA_COLUMN_BATCH_SECONDS.start_timer();
+
+    verify_cell_kzg_proof_batch_refs(
+        &commitments_bytes.iter().collect::<Vec<_>>(),
+        cell_indices,
+        &cells.iter().collect::<Vec<_>>(),
+        &proofs_bytes.iter().collect::<Vec<_>>(),
+    )
+}
+
+/// Verify the KZG proofs of many data column sidecars in one batched check.
+pub fn verify_data_column_sidecars_batch<'a>(
+    sidecars: impl IntoIterator<Item = &'a DataColumnSidecar>,
+) -> anyhow::Result<bool> {
+    let mut commitments: Vec<&KZGCommitment> = Vec::new();
+    let mut cell_indices: Vec<u64> = Vec::new();
+    let mut cells: Vec<&Cell> = Vec::new();
+    let mut proofs: Vec<&KZGProof> = Vec::new();
+    for sidecar in sidecars {
+        // As in the per-sidecar check, the column index is the cell index for
+        // every one of the sidecar's rows.
+        commitments.extend(sidecar.kzg_commitments.iter());
+        cell_indices.extend(std::iter::repeat_n(sidecar.index, sidecar.column.len()));
+        cells.extend(sidecar.column.iter());
+        proofs.extend(sidecar.kzg_proofs.iter());
+    }
+    verify_cell_kzg_proof_batch_refs(&commitments, &cell_indices, &cells, &proofs)
+}
+
+/// The reference-based core of the batched cell verification
+fn verify_cell_kzg_proof_batch_refs(
+    commitments_bytes: &[&KZGCommitment],
+    cell_indices: &[u64],
+    cells: &[&Cell],
+    proofs_bytes: &[&KZGProof],
+) -> anyhow::Result<bool> {
+    let _timer = BEACON_KZG_VERIFICATION_DATA_COLUMN_BATCH_SECONDS.start_timer();
+
     if commitments_bytes.len() != cells.len()
         || cells.len() != proofs_bytes.len()
         || proofs_bytes.len() != cell_indices.len()
@@ -124,7 +163,7 @@ pub fn verify_cell_kzg_proof_batch(
 
 /// Verify if the KZG proofs are correct for a data column sidecar.
 ///
-/// Spec: https://ethereum.github.io/consensus-specs/specs/fulu/p2p-interface/#verify_data_column_sidecar_kzg_proofs
+/// Spec: https://ethereum.github.io/consensus-specs/fulu/p2p-interface/#new-verify_data_column_sidecar_kzg_proofs
 pub fn verify_data_column_sidecar_kzg_proofs(sidecar: &DataColumnSidecar) -> anyhow::Result<bool> {
     // The column index also represents the cell index
     let cell_indices = vec![sidecar.index; sidecar.column.len()];
